@@ -430,7 +430,20 @@ class UsageLog(Base):
 
     __tablename__ = "usage_logs"
     __table_args__ = (
+        # Every filter this table serves is paired with a time window and sorted
+        # newest-first, so the indexed dimensions carry timestamp as their trailing
+        # column and the equality dimension leads. This table is the hottest insert
+        # path in the gateway (one row per attempt, several per routed request), so a
+        # dimension only earns an index if a real query filters on it: model,
+        # source_label and status_code are deliberately unindexed (see below and
+        # ``status_code``), and a single-column index whose column already leads one
+        # of these composites would only tax writes.
+        #
+        # user_id and api_key_id are foreign keys and are covered here rather than
+        # with ``index=True``: as the leading column of a composite they still serve
+        # the ``ondelete="SET NULL"`` lookups.
         Index("ix_usage_logs_user_id_timestamp", "user_id", "timestamp"),
+        Index("ix_usage_logs_api_key_id_timestamp", "api_key_id", "timestamp"),
         # Supports the activity-log viewer's primary "show errors, newest-first"
         # query. status is low-cardinality; model is high-cardinality and left
         # unindexed on purpose.
@@ -443,8 +456,8 @@ class UsageLog(Base):
     )
 
     id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid7()))
-    api_key_id: Mapped[str | None] = mapped_column(ForeignKey("api_keys.id", ondelete="SET NULL"), index=True)
-    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.user_id", ondelete="SET NULL"), index=True)
+    api_key_id: Mapped[str | None] = mapped_column(ForeignKey("api_keys.id", ondelete="SET NULL"))
+    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.user_id", ondelete="SET NULL"))
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     model: Mapped[str] = mapped_column()
@@ -455,7 +468,9 @@ class UsageLog(Base):
     # "claude_code") for usage imported through POST /v1/usage/external-events.
     # source_event_id is the upstream event id used for idempotent import (NULL for
     # gateway rows); source_label carries optional session/project attribution.
-    source: Mapped[str] = mapped_column(default="gateway", index=True)
+    # Unindexed on its own: ``uq_usage_logs_source_event`` leads with source, which
+    # covers both the source filter and the idempotent-import probe below.
+    source: Mapped[str] = mapped_column(default="gateway")
     source_event_id: Mapped[str | None] = mapped_column()
     source_label: Mapped[str | None] = mapped_column()
     # Whether this row's cost participates in budget enforcement. True for normal
@@ -492,8 +507,12 @@ class UsageLog(Base):
     # "router:<name>"). `attempt_position` and `attempt_count` locate the row in
     # the plan, so "served on attempt 2 of 3" is a query rather than a log grep.
     # `request_group_id` ties a request's rows together, which is what makes the
-    # absorbed attempts findable from the row that served.
-    policy_name: Mapped[str | None] = mapped_column(index=True)
+    # absorbed attempts findable from the row that served. It is indexed because
+    # ``GET /v1/usage`` filters on it directly; the index stays single-column because
+    # the lookup is a high-cardinality equality returning one request's few attempts,
+    # with no time window and nothing worth sorting. `policy_name` is only ever read
+    # back on a row, never filtered on, so it carries no index.
+    policy_name: Mapped[str | None] = mapped_column()
     selection_reason: Mapped[str | None] = mapped_column()
     attempt_position: Mapped[int | None] = mapped_column()
     attempt_count: Mapped[int | None] = mapped_column()
