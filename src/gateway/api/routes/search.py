@@ -39,7 +39,6 @@ bill precisely.
 """
 
 import time
-import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 
@@ -59,6 +58,7 @@ from gateway.api.routes._pipeline import (
     rate_limit_headers,
 )
 from gateway.core.config import GatewayConfig
+from gateway.ids import uuid7
 from gateway.inflight import track_request
 from gateway.log_config import logger
 from gateway.models.entities import APIKey, UsageLog
@@ -326,7 +326,7 @@ async def _dispatch_search(
         ``exclude_from_budget`` flag.
         """
         return UsageLog(
-            id=str(uuid.uuid4()),
+            id=str(uuid7()),
             api_key_id=api_key_id,
             user_id=user_id,
             timestamp=datetime.now(UTC),

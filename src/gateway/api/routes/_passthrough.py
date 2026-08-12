@@ -23,7 +23,6 @@ scaffolds record a rejection identically.
 from __future__ import annotations
 
 import time
-import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -45,6 +44,7 @@ from gateway.api.routes._pipeline import (
 )
 from gateway.api.routes._platform import _classify_upstream_error
 from gateway.core.config import GatewayConfig
+from gateway.ids import uuid7
 from gateway.inflight import track_request
 from gateway.log_config import logger
 from gateway.model_labeling import relabel_model
@@ -404,7 +404,7 @@ async def run_passthrough(
         each of the call sites below.
         """
         return UsageLog(
-            id=str(uuid.uuid4()),
+            id=str(uuid7()),
             api_key_id=api_key_id,
             user_id=user_id,
             timestamp=datetime.now(UTC),

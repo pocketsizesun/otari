@@ -3,7 +3,6 @@
 import json
 import os
 import tempfile
-import uuid
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
@@ -20,6 +19,7 @@ from gateway.api.routes._helpers import resolve_user_id
 from gateway.api.routes._pipeline import _raise_for_unresolvable_model, failure_status_code
 from gateway.api.routes.chat import rate_limit_headers
 from gateway.core.config import GatewayConfig
+from gateway.ids import uuid7
 from gateway.log_config import logger
 from gateway.models.entities import APIKey, BatchRecord, UsageLog
 from gateway.rate_limit import check_rate_limit
@@ -91,7 +91,7 @@ async def log_batch_usage(
     # is submitted and later polled, so there is no synchronous request duration
     # to record (unlike the chat/passthrough paths).
     usage_log = UsageLog(
-        id=str(uuid.uuid4()),
+        id=str(uuid7()),
         api_key_id=api_key_id,
         user_id=user_id,
         timestamp=datetime.now(UTC),
