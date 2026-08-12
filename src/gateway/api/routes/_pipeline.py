@@ -95,6 +95,7 @@ from gateway.api.routes._tools import (
 from gateway.core.config import GatewayConfig
 from gateway.core.env import otari_env
 from gateway.core.usage import cache_read_tokens_of, cache_write_1h_tokens_of, cache_write_tokens_of
+from gateway.ids import uuid7
 from gateway.inflight import track_request
 from gateway.log_config import logger
 from gateway.metrics import record_abandoned_attempt, record_cost, record_tokens
@@ -1340,7 +1341,7 @@ async def resolve_request_context(
         resolved_provider=resolved_provider,
         plan=plan,
         estimate_inputs=estimate_inputs,
-        request_group_id=str(uuid.uuid4()) if plan is not None else None,
+        request_group_id=str(uuid7()) if plan is not None else None,
     )
 
 
@@ -1832,7 +1833,7 @@ async def log_usage(
 
     """
     usage_log = UsageLog(
-        id=str(uuid.uuid4()),
+        id=str(uuid7()),
         api_key_id=api_key_id,
         user_id=user_id,
         timestamp=datetime.now(UTC),

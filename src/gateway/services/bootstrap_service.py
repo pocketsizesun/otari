@@ -1,4 +1,3 @@
-import uuid
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -6,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from gateway.auth import generate_api_key, hash_key, key_prefix
 from gateway.core.config import GatewayConfig
+from gateway.ids import uuid7
 from gateway.log_config import log_secret
 from gateway.models.entities import APIKey
 from gateway.repositories.users_repository import get_or_create_default_user
@@ -22,7 +22,7 @@ async def bootstrap_first_api_key(config: GatewayConfig, db: AsyncSession) -> No
         return
 
     api_key = generate_api_key()
-    key_id = str(uuid.uuid4())
+    key_id = str(uuid7())
 
     # The bootstrap key has no explicit owner, so it lands on the shared "default"
     # user like any other no-user key, rather than a per-key virtual user.

@@ -26,11 +26,12 @@ what it serializes instead, and reports the true count alongside it.
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from time import monotonic
 from typing import TYPE_CHECKING, Any
+
+from gateway.ids import uuid7
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
@@ -92,7 +93,7 @@ class InFlightRegistry:
     ) -> str:
         """Record a request as in flight and return its tracking id."""
         entry = InFlightRequest(
-            id=str(uuid.uuid4()),
+            id=str(uuid7()),
             endpoint=endpoint,
             model=model,
             provider=provider,

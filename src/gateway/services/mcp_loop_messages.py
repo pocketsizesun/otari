@@ -15,7 +15,6 @@ The duck-typed pool interface (``owns_tool`` / ``call_tool`` /
 from __future__ import annotations
 
 import json
-import uuid
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from contextlib import aclosing
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
@@ -28,6 +27,7 @@ from any_llm.types.messages import (
     ContentBlockStopEvent,
 )
 
+from gateway.ids import uuid7
 from gateway.log_config import logger
 from gateway.services._tool_loop import StreamAction, run_tool_loop, run_tool_loop_stream
 from gateway.services.mcp_loop import (
@@ -77,7 +77,7 @@ def _native_web_search_blocks(query: str, results: list[dict[str, Any]]) -> list
     to Anthropic instead would be rejected there, which is the same trade-off the
     Responses path already accepts for its minted ``web_search_call`` items.
     """
-    tool_use_id = f"srvtoolu_{uuid.uuid4().hex}"
+    tool_use_id = f"srvtoolu_{uuid7().hex}"
     citations: list[WebSearchResultBlock] = []
     for result in results:
         url = str(result.get("url") or "").strip()

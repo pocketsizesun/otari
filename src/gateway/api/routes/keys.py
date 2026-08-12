@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
@@ -11,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gateway.api.deps import get_config, get_db, verify_master_key
 from gateway.auth.models import generate_api_key, hash_key, key_prefix
 from gateway.core.config import GatewayConfig
+from gateway.ids import uuid7
 from gateway.models.entities import APIKey, User
 from gateway.repositories.users_repository import get_or_create_default_user
 from gateway.services.model_access import is_allowlist_subset, validate_allowed_models
@@ -145,7 +145,7 @@ async def create_key(
 
     api_key = generate_api_key()
     key_hash = hash_key(api_key)
-    key_id = uuid.uuid4()
+    key_id = uuid7()
 
     if request.user_id:
         result = await db.execute(select(User).where(User.user_id == request.user_id))

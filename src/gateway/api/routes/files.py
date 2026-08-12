@@ -7,7 +7,6 @@ providers or extracts them to text for text-only local models.
 """
 
 import mimetypes
-import uuid
 from collections.abc import AsyncGenerator, AsyncIterator
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
@@ -22,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gateway.api.deps import get_config, get_db, get_file_store, verify_api_key_or_master_key
 from gateway.api.routes._helpers import resolve_user_id
 from gateway.core.config import GatewayConfig
+from gateway.ids import uuid7
 from gateway.log_config import logger
 from gateway.models.entities import APIKey, FileObject
 from gateway.services.file_service import fetch_file
@@ -161,7 +161,7 @@ async def create_file(
 
     user_id = _resolve_user(auth_result, user, config)
 
-    file_id = f"file-{uuid.uuid4().hex}"
+    file_id = f"file-{uuid7().hex}"
     storage_ref, size = await file_store.put_stream(file_id, _capped_chunks(file, config.files_max_bytes))
     if size == 0:
         # The empty check now happens after the stream drains (we don't know

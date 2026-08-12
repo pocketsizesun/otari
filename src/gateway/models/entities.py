@@ -1,9 +1,10 @@
-import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Index, Text, UniqueConstraint, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from gateway.ids import uuid7
 
 
 class Base(DeclarativeBase):
@@ -88,7 +89,7 @@ class Budget(Base):
 
     __tablename__ = "budgets"
 
-    budget_id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
+    budget_id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid7()))
     name: Mapped[str | None] = mapped_column(default=None)
     max_budget: Mapped[float | None] = mapped_column()
     budget_duration_sec: Mapped[int | None] = mapped_column()
@@ -203,7 +204,7 @@ class ModelAlias(Base):
         ),
     )
 
-    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid7()))
     # No index of its own: uq_model_aliases_name_user already leads with `name`,
     # and uq_model_aliases_global_name indexes it again for the global rows. A
     # third copy would be paid for on every write to serve reads that mostly do
@@ -259,7 +260,7 @@ class RoutingPolicy(Base):
         ),
     )
 
-    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid7()))
     name: Mapped[str] = mapped_column()
     spec: Mapped[dict[str, Any]] = mapped_column(JSON)
     user_id: Mapped[str | None] = mapped_column(ForeignKey("users.user_id", ondelete="CASCADE"), index=True)
@@ -435,7 +436,7 @@ class UsageLog(Base):
         UniqueConstraint("source", "source_event_id", name="uq_usage_logs_source_event"),
     )
 
-    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid7()))
     api_key_id: Mapped[str | None] = mapped_column(ForeignKey("api_keys.id", ondelete="SET NULL"), index=True)
     user_id: Mapped[str | None] = mapped_column(ForeignKey("users.user_id", ondelete="SET NULL"), index=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
@@ -555,7 +556,7 @@ class FileObject(Base):
 
     __tablename__ = "file_objects"
 
-    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: f"file-{uuid.uuid4().hex}")
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: f"file-{uuid7().hex}")
     # Always set to the authenticated user; non-null enforces the user-scoping
     # contract at the schema level. CASCADE removes a user's files on delete.
     user_id: Mapped[str] = mapped_column(ForeignKey("users.user_id", ondelete="CASCADE"), index=True)
@@ -650,7 +651,7 @@ class RoutingMemory(Base):
         Index("ix_routing_memory_user_model_task", "user_id", "embedding_model", "task_id"),
     )
 
-    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid7()))
     user_id: Mapped[str] = mapped_column(
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -694,7 +695,7 @@ class RouterPreference(Base):
     __tablename__ = "router_preferences"
     __table_args__ = (Index("ix_router_preferences_user_created", "user_id", "created_at"),)
 
-    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid7()))
     user_id: Mapped[str] = mapped_column(
         ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True
     )
